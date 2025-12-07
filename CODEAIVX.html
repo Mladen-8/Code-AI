@@ -1,487 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>CodeAI — Advanced File, Code & Website Scanner</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeAI — Code Analyzer</title>
   <style>
-    :root { color-scheme: dark; }
-    html { scroll-behavior: smooth; }
+    :root {
+      --bg: #0d0d0d;
+      --panel: #1a1a1a;
+      --accent: #4b8bff;
+      --text: #e6e6e6;
+      --danger: #ff4b4b;
+      --success: #4bff88;
+    }
+
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-      background: #0b1220;
-      color: #e6eef8;
-      -webkit-font-smoothing:antialiased;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
     }
 
-    header {
-      background:#0f1724;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;
-      border-bottom:1px solid #1f2a3a; position:sticky; top:0; z-index:50;
-    }
-    header h1 { margin:0; color:#60a5fa; font-size:1.25rem; letter-spacing:0.2px; }
-    nav a { color:#cfe8ff; margin-left:1rem; text-decoration:none; font-size:0.95rem; }
-    nav a:hover { color:#60a5fa; }
-
-    .hero { text-align:center; padding:3.5rem 1.5rem; background: linear-gradient(180deg,#071024,#071628 60%); }
-    .hero h2 { margin:0 0 0.5rem 0; font-size:2rem; color:#e6f3ff; }
-    .hero p { margin:0 auto 1rem; max-width:720px; color:#98a9c2; }
-
-    .container { max-width:1000px; margin:2rem auto; padding:0 1rem; }
-
-    .card {
-      background:#0e1622;border:1px solid #1f2a3a;border-radius:10px;padding:1.25rem;margin-bottom:1rem;
-      box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+    .box {
+      background: var(--panel);
+      padding: 25px;
+      width: 90%;
+      max-width: 800px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #000;
+      animation: fadeIn 0.8s ease-in-out;
     }
 
-    .row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    @media (max-width:880px){ .row { grid-template-columns:1fr; } }
-
-    label { display:block;font-weight:600;color:#cfe8ff;margin-bottom:0.5rem; }
-    input[type=file] { background:#071122;color:#e6eef8;padding:0.5rem;border-radius:8px;border:1px solid #223247; }
-    .status { color:#9fb2d1;margin-top:0.5rem;font-size:0.95rem; }
-
-    .btn {
-      background:#60a5fa;color:#071024;border:none;padding:.6rem .9rem;border-radius:8px;font-weight:700;
-      cursor:pointer;font-size:0.95rem;
-    }
-    .btn:hover{ background:#3b82f6; }
-    .btn.secondary { background:#283647;color:#dbeafe; border:1px solid #2c3e50; }
-
-    textarea { width:100%; min-height:220px; resize:vertical;
-      background:#071022;border:1px solid #223247;color:#e6eef8;padding:12px;border-radius:8px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:13px;
+    h2 {
+      text-align: center;
+      color: var(--accent);
+      font-size: 26px;
     }
 
-    .result { margin-top:1rem;padding:1rem;border-radius:8px;border:1px solid #223247;background:#071022; color:#e6eef8; }
-    .result.safe{ border-color:#064e3b; box-shadow: 0 0 0 3px rgba(16,185,129,0.05); }
-    .result.warning{ border-color:#92400e; box-shadow: 0 0 0 3px rgba(245,158,11,0.05); }
-    .result.danger{ border-color:#7f1d1d; box-shadow: 0 0 0 3px rgba(239,68,68,0.05); }
+    textarea {
+      width: 100%;
+      height: 250px;
+      background: #0f0f0f;
+      color: var(--text);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 16px;
+      resize: none;
+    }
 
-    pre.code { background:#051018;padding:12px;border-radius:8px;border:1px solid #142233;overflow:auto;color:#dbeafe;font-size:13px;line-height:1.45; }
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: 0.2s ease-in-out;
+    }
 
-    footer { text-align:center;padding:1.25rem;color:#9fb2d1;border-top:1px solid #111827;margin-top:2rem; }
-    .disclaimer { color:#7f98b6;font-size:0.9rem;margin-top:0.75rem; }
+    button:hover {
+      background: #3a72d8;
+    }
 
-    /* small helpers */
-    .muted { color:#9fb2d1; font-size:0.95rem; }
-    .small { font-size:0.9rem; color:#9fb2d1; }
-    .switch { display:inline-flex; align-items:center; gap:.5rem; }
-    input[type="text"] { width:100%; padding:.5rem; border-radius:8px; border:1px solid #223247; background:#071022; color:#e6eef8; }
+    button:active {
+      transform: scale(0.98);
+    }
+
+    /* Loading Spinner */
+    .loader {
+      display: none;
+      margin: 20px auto;
+      border: 6px solid #222;
+      border-top: 6px solid var(--accent);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: var(--panel);
+      padding: 30px;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 0 20px #000;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .close {
+      cursor: pointer;
+      float: right;
+      font-size: 24px;
+      color: var(--danger);
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>CodeAI</h1>
-    <nav>
-      <a href="#upload">Upload</a>
-      <a href="#paste">Paste Code</a>
-      <a href="#website">Scan Website</a>
-      <a href="#about">About</a>
-    </nav>
-  </header>
 
-  <section class="hero">
-    <h2>Advanced File, Code & Website Scanner</h2>
-    <p>Upload files, paste code or scan websites using in-browser heuristic checks. Scans are local where possible; website scans may require a proxy due to browser CORS rules.</p>
-    <button class="btn" onclick="document.querySelector('#upload').scrollIntoView({behavior:'smooth'})">Start Scanning</button>
-  </section>
+  <div class="box">
+    <h2>CodeAI — Code Scanner & Vulnerability Analyzer</h2>
 
-  <main class="container">
-    <!-- File Upload Scanner -->
-    <section id="upload" class="card" aria-labelledby="upload-h">
-      <h3 id="upload-h">File Upload Scanner</h3>
-      <p class="small">Choose a file (scripts, source files, archives). Text-based scans only apply to readable files.</p>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <input id="fileInput" type="file" accept="*/*"/>
-        <button id="scanFileBtn" class="btn">Scan File</button>
-        <button id="resetFileBtn" class="btn secondary">Reset</button>
-      </div>
-      <div id="fileStatus" class="status" aria-live="polite">No file selected.</div>
-      <div id="fileScanResult" class="result" hidden></div>
-      <p class="disclaimer">This is a heuristic scan intended for quick triage. Use sandboxing or professional analysis for high-risk files.</p>
-    </section>
+    <textarea id="codeInput" placeholder="Paste your code here..."></textarea>
 
-    <!-- Paste Code Scanner -->
-    <section id="paste" class="card" aria-labelledby="paste-h">
-      <h3 id="paste-h">Paste Code to Scan</h3>
-      <p class="small">Paste any code snippet or full source file below and click "Scan Code".</p>
-      <textarea id="codeInput" placeholder="// Paste code here..."></textarea>
-      <div style="display:flex;gap:12px;margin-top:10px">
-        <button id="scanCodeBtn" class="btn">Scan Code</button>
-        <button id="clearCodeBtn" class="btn secondary">Clear</button>
-      </div>
-      <div id="codeScanResult" class="result" hidden></div>
-      <p class="disclaimer">Language detection is heuristic. Results are probabilistic and best used as guidance.</p>
-    </section>
+    <button onclick="scanCode()">Scan Code</button>
+    <div class="loader" id="loader"></div>
+  </div>
 
-    <!-- Website Scanner -->
-    <section id="website" class="card" aria-labelledby="website-h">
-      <h3 id="website-h">Scan Website / URL</h3>
-      <p class="small">Enter a URL to fetch and scan the page HTML and inline JavaScript for suspicious patterns.</p>
+  <!-- MODAL -->
+  <div class="modal" id="resultModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Scan Results</h2>
+      <div class="result" id="scanResult"></div>
+      <button onclick="downloadReport()">Download Report</button>
+    </div>
+  </div>
 
-      <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center;">
-        <input id="urlInput" type="text" placeholder="https://example.com" />
-        <button id="scanUrlBtn" class="btn">Scan Website</button>
-      </div>
+<script>
+/* Suspicious keywords */
+const suspiciousTokens = [
+  "login","secure","verify","password","encrypt","eval","exec","system",
+  "shell","cmd","token","secret","root","admin","fetch","http","https",
+  "dangerouslySetInnerHTML","child_process","fs","mysql","mongodb","insert",
+  "drop","alter","delete","select","base64","decode","encode"
+];
 
-      <div style="display:flex;gap:12px;align-items:center;margin-top:8px">
-        <label class="switch"><input id="useProxy" type="checkbox"/> Use CORS proxy (try if direct fetch fails)</label>
-        <span class="muted">Proxy sends request through <code>api.allorigins.win</code>.</span>
-      </div>
+function scanCode() {
+  const code = document.getElementById("codeInput").value.trim();
+  const loader = document.getElementById("loader");
 
-      <div id="urlStatus" class="status" aria-live="polite">Ready to scan a website.</div>
-      <div id="urlScanResult" class="result" hidden></div>
+  if (!code) {
+    alert("Please paste some code first.");
+    return;
+  }
 
-      <p class="disclaimer">Note: Direct fetches may fail for many sites due to CORS. Use proxy only for testing — proxy operators will see the requested page content.</p>
-    </section>
+  loader.style.display = "block";
 
-    <section id="about" class="card" aria-labelledby="about-h">
-      <h3 id="about-h">About CodeAI</h3>
-      <p class="small">CodeAI performs in-browser static analysis using pattern matching and behavioural heuristics. It flags risky constructs like <code>eval</code>, shell-execution calls, networking functions, base64/encoding usage, hidden iframes and auto-redirects.</p>
-    </section>
-  </main>
+  setTimeout(() => {
+    loader.style.display = "none";
 
-  <footer>
-    © <span id="year"></span> CodeAI — Local heuristic scanner. All rights reserved.
-  </footer>
+    const findings = suspiciousTokens.filter(token =>
+      code.toLowerCase().includes(token.toLowerCase())
+    );
 
-  <script>
-    // Branding
-    document.getElementById("year").textContent = new Date().getFullYear();
+    let resultText = "";
 
-    // Elements
-    const fileInput = document.getElementById("fileInput");
-    const fileStatus = document.getElementById("fileStatus");
-    const scanFileBtn = document.getElementById("scanFileBtn");
-    const resetFileBtn = document.getElementById("resetFileBtn");
-    const fileScanResult = document.getElementById("fileScanResult");
-
-    const codeInput = document.getElementById("codeInput");
-    const scanCodeBtn = document.getElementById("scanCodeBtn");
-    const clearCodeBtn = document.getElementById("clearCodeBtn");
-    const codeScanResult = document.getElementById("codeScanResult");
-
-    const urlInput = document.getElementById("urlInput");
-    const scanUrlBtn = document.getElementById("scanUrlBtn");
-    const useProxy = document.getElementById("useProxy");
-    const urlStatus = document.getElementById("urlStatus");
-    const urlScanResult = document.getElementById("urlScanResult");
-
-    const MAX_SIZE = 8 * 1024 * 1024; // 8MB
-
-    // -------------------------
-    // Shared scanning engine
-    // -------------------------
-    function detectLanguage(sample) {
-      if (!sample || !sample.trim()) return "Unknown";
-      const s = sample.slice(0, 2000);
-      const rules = [
-        [/^\s*#!/, "Shell / Script"],
-        [/^\s*<\?php/i, "PHP"],
-        [/\bdef\s+\w+\(/, "Python"],
-        [/\bconsole\.log\b|\bfunction\b|\bvar\s+|\bconst\b|\blet\b/, "JavaScript"],
-        [/#include\s+<|int\s+main\s*\(/, "C/C++"],
-        [/\busing System\b|\bConsole\.WriteLine\b/, "C#"],
-        [/Invoke-Expression|Get-Content|Start-Process/i, "PowerShell"],
-        [/@echo off|\bsetlocal\b/, "Batch / CMD"],
-      ];
-      for (let [re, name] of rules) if (re.test(s)) return name;
-      return "Plain Text / Unknown";
+    if (findings.length === 0) {
+      resultText = "✔ No suspicious or high-risk patterns detected.";
+    } else {
+      resultText = "⚠ Suspicious Tokens Found:\n\n";
+      findings.forEach(f => resultText += "• " + f + "\n");
     }
 
-    // Patterns for risky constructs (used for files & pasted code)
-    const PATTERNS = [
-      { re: /eval\s*\(/gi, level: 3, reason: "Arbitrary code execution (eval)" },
-      { re: /\bnew Function\b/gi, level: 3, reason: "Dynamic function creation" },
-      { re: /\bexec\s*\(/gi, level: 3, reason: "Executes system commands" },
-      { re: /\bsubprocess\b|\bos\.system\b/gi, level: 3, reason: "Spawns external process" },
-      { re: /\bchild_process\b|\bspawn\b/gi, level: 3, reason: "Child process / OS execution" },
-      { re: /\bfetch\(|XMLHttpRequest\b|\bwget\b|\bcurl\b/gi, level: 2, reason: "Network request / remote fetch" },
-      { re: /base64|atob|btoa|Buffer\.from\(/gi, level: 2, reason: "Encoding / potential obfuscation" },
-      { re: /document\.write|innerHTML/gi, level: 2, reason: "DOM injection / XSS risk" },
-      { re: /powershell\s+-enc|Invoke-Expression/gi, level: 3, reason: "Encoded PowerShell payload" },
-      { re: /\bchmod\s+\+x\b|\brm\s+-rf\b|\bsudo\b/gi, level: 3, reason: "Dangerous system commands" },
-      { re: /\bopen\(|FileStream|fopen\(/gi, level: 1, reason: "File I/O operations" },
-      { re: /eval\(|ob_start|base64_decode/gi, level: 2, reason: "Common obfuscation/decode functions" }
-    ];
+    document.getElementById("scanResult").innerText = resultText;
+    openModal();
 
-    // Additional website-specific patterns
-    const WEB_PATTERNS = [
-      { re: /<iframe\b[^>]*>/gi, level: 2, reason: "iframe element found (hidden/third-party frames are suspicious)" },
-      { re: /<meta[^>]*http-equiv=['"]refresh['"]/gi, level: 2, reason: "Meta refresh (auto-redirect) present" },
-      { re: /location\.href\s*=/gi, level: 2, reason: "Immediate JavaScript redirect" },
-      { re: /document\.write\s*\(.*eval/gi, level: 3, reason: "document.write + eval (obfuscated inline eval)" },
-      { re: /<script[^>]+src=['"][^'"]+\.ru['"]/gi, level: 3, reason: "External script from .ru domain (suspicious TLD example)" },
-      { re: /base64_decode|fromCharCode\(|unescape\(/gi, level: 2, reason: "Obfuscated JS decoding found" },
-      { re: /<script[^>]*>[\s\S]*?eval\(/gi, level: 3, reason: "Inline script uses eval()" },
-      { re: /\.(exe|zip|scr|bat)(['"]|>)/gi, level: 3, reason: "Direct link to likely executable or archive" },
-      { re: /onerror\s*=\s*function/gi, level: 1, reason: "onerror handler (used in some attacks to hide failures)" }
-    ];
+  }, 1000); // Fake scan delay
+}
 
-    // scanText runs through PATTERNS and returns findings
-    function scanText(text) {
-      const findings = [];
-      let score = 0;
-      for (const p of PATTERNS) {
-        const m = text.match(p.re);
-        if (m && m.length) {
-          findings.push({ reason: p.reason, hits: m.length, level: p.level });
-          score += p.level * m.length;
-        }
-      }
-      let status = "SAFE";
-      if (score >= 10) status = "DANGEROUS";
-      else if (score >= 4) status = "SUSPICIOUS";
-      return { findings, score, status, language: detectLanguage(text) };
-    }
+function openModal() {
+  document.getElementById("resultModal").style.display = "flex";
+}
 
-    // scanHTML applies both PATTERNS and WEB_PATTERNS and extra heuristics
-    function scanHTML(html, url = "") {
-      const findings = [];
-      let score = 0;
+function closeModal() {
+  document.getElementById("resultModal").style.display = "none";
+}
 
-      // Generic code-level patterns inside HTML (scripts)
-      for (const p of PATTERNS) {
-        const m = html.match(p.re);
-        if (m && m.length) { findings.push({ reason: p.reason + " (in page)", hits: m.length, level: p.level }); score += p.level * m.length; }
-      }
+function downloadReport() {
+  const content = document.getElementById("scanResult").innerText;
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
 
-      // Website-specific checks
-      for (const wp of WEB_PATTERNS) {
-        const m = html.match(wp.re);
-        if (m && m.length) { findings.push({ reason: wp.reason, hits: m.length, level: wp.level }); score += wp.level * m.length; }
-      }
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "CodeAI-Scan-Report.txt";
+  a.click();
 
-      // Extract script srcs and count remote scripts
-      const scriptSrcs = [...html.matchAll(/<script[^>]+src=['"]([^'"]+)['"]/gi)].map(m => m[1]);
-      const externalCount = scriptSrcs.length;
-      if (externalCount > 5) { findings.push({ reason: `Many external scripts (${externalCount})`, hits: externalCount, level: 1 }); score += externalCount * 1; }
+  URL.revokeObjectURL(url);
+}
+</script>
 
-      // domain heuristics
-      if (url) {
-        try {
-          const u = new URL(url);
-          const domain = u.hostname.toLowerCase();
-          const suspiciousTokens = ["login", "secure", "verify", "free", "download", "update"];
-          for (const t of suspiciousTokens) if (domain.includes(t)) { findings.push({ reason: `Suspicious domain token: ${t}`, hits: 1, level: 1}); score += 1; }
-        } catch(e){}
-      }
-
-      let status = "SAFE";
-      if (score >= 12) status = "DANGEROUS";
-      else if (score >= 5) status = "SUSPICIOUS";
-
-      return { findings, score, status, scriptSrcs };
-    }
-
-    // Utility: escape HTML for display
-    function escapeHtml(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
-    // Render generic results
-    function renderResult(container, result, originalText, extraHtml) {
-      container.hidden = false;
-      container.className = "result " + (result.status === "SAFE" ? "safe" : result.status === "SUSPICIOUS" ? "warning" : "danger");
-
-      if (!result.findings || result.findings.length === 0) {
-        container.innerHTML = `<strong>Preliminary Result:</strong> <span style="font-weight:700">${result.status}</span><br>
-          <small>Language: ${result.language || "HTML/JS"}</small><br>
-          <p style="margin-top:.5rem;color:#9fb2d1">No suspicious patterns detected by heuristics. This is not definitive.</p>`;
-        return;
-      }
-
-      const list = result.findings.map(f => `<li><strong>${escapeHtml(f.reason)}</strong> — ${f.hits} hit(s) (level ${f.level})</li>`).join("");
-      let preview = "";
-      if (originalText) preview = `<details style="margin-top:.5rem;border-top:1px dashed #223247;padding-top:.6rem">
-        <summary style="cursor:pointer;color:#cfe8ff">Show page/code preview</summary>
-        <pre class="code">${escapeHtml(originalText.slice(0,5000))}</pre>
-      </details>`;
-      const extras = extraHtml ? `<div style="margin-top:.5rem">${extraHtml}</div>` : "";
-
-      container.innerHTML = `
-        <h4 style="margin:0 0 .5rem 0">Risk: ${result.status} — Score: ${result.score}</h4>
-        <ul style="margin:0 0 0.75rem 1.15rem;color:#dbeafe">${list}</ul>
-        ${extras}
-        ${preview}
-        <p style="color:#aabed9;margin-top:.5rem">Heuristic scan — use sandboxing, server-side scanners or VirusTotal for deeper analysis.</p>
-      `;
-    }
-
-    // -------------------------
-    // File scanner handlers
-    // -------------------------
-    fileInput.addEventListener("change", () => {
-      const f = fileInput.files[0];
-      if (!f) { fileStatus.textContent = "No file selected."; return; }
-      fileStatus.textContent = `Selected: ${f.name} — ${Math.round(f.size/1024)} KB`;
-    });
-
-    function readFileAsArrayBuffer(file) {
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.onerror = () => reject(new Error("Read error"));
-        r.readAsArrayBuffer(file);
-      });
-    }
-
-    function readFileAsText(file) {
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.onerror = () => reject(new Error("Read error"));
-        r.readAsText(file);
-      });
-    }
-
-    scanFileBtn.addEventListener("click", async () => {
-      fileScanResult.hidden = true;
-      const file = fileInput.files[0];
-      if (!file) { fileStatus.textContent = "No file selected."; return; }
-
-      if (file.size > MAX_SIZE) {
-        fileScanResult.hidden = false;
-        fileScanResult.className = "result warning";
-        fileScanResult.innerHTML = `<strong>File too large.</strong> Max ${Math.round(MAX_SIZE/1024/1024)} MB allowed.`;
-        return;
-      }
-
-      scanFileBtn.disabled = true;
-      resetFileBtn.disabled = true;
-      fileStatus.textContent = `Reading ${file.name}...`;
-
-      try {
-        const buffer = await readFileAsArrayBuffer(file);
-        const uint = new Uint8Array(buffer);
-        let nonText = 0;
-        for (let i = 0; i < uint.length && i < 2000; i++) { if (uint[i] === 0 || uint[i] > 127) nonText++; }
-        const isBinary = nonText > 50;
-
-        if (isBinary) {
-          fileScanResult.hidden = false;
-          fileScanResult.className = "result warning";
-          fileScanResult.innerHTML = `<strong>Binary file detected.</strong><br>Text-based heuristic scanning is not applicable. Consider using specialized binary analysis tools.`;
-        } else {
-          const text = await readFileAsText(file);
-          const res = scanText(text);
-          renderResult(fileScanResult, res, text);
-        }
-      } catch (err) {
-        fileScanResult.hidden = false;
-        fileScanResult.className = "result danger";
-        fileScanResult.textContent = "Error reading file: " + err.message;
-      } finally {
-        scanFileBtn.disabled = false;
-        resetFileBtn.disabled = false;
-      }
-    });
-
-    resetFileBtn.addEventListener("click", () => {
-      fileInput.value = "";
-      fileStatus.textContent = "No file selected.";
-      fileScanResult.hidden = true;
-    });
-
-    // -------------------------
-    // Paste code scanner
-    // -------------------------
-    scanCodeBtn.addEventListener("click", () => {
-      codeScanResult.hidden = true;
-      const code = codeInput.value || "";
-      if (!code.trim()) {
-        codeScanResult.hidden = false;
-        codeScanResult.className = "result warning";
-        codeScanResult.innerHTML = "<strong>No code provided.</strong> Paste code into the box first.";
-        return;
-      }
-      const res = scanText(code);
-      renderResult(codeScanResult, res, code);
-    });
-
-    clearCodeBtn.addEventListener("click", () => {
-      codeInput.value = "";
-      codeScanResult.hidden = true;
-    });
-
-    // Ctrl+Enter to scan in paste box
-    codeInput.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); scanCodeBtn.click(); }
-    });
-
-    // -------------------------
-    // Website scanner
-    // -------------------------
-    // Public CORS proxy used optionally. Only for testing. Proxy operator sees requested page.
-    const CORS_PROXY = "https://api.allorigins.win/raw?url=";
-
-    async function fetchUrlContent(url, proxy=false) {
-      let target = url.trim();
-      if (!/^https?:\/\//i.test(target)) target = "http://" + target;
-      try {
-        if (proxy) {
-          const proxied = CORS_PROXY + encodeURIComponent(target);
-          const resp = await fetch(proxied, { method: "GET" });
-          if (!resp.ok) throw new Error("Proxy fetch failed: " + resp.status);
-          const text = await resp.text();
-          return { ok: true, text };
-        } else {
-          const resp = await fetch(target, { method: "GET", mode: "cors" });
-          if (!resp.ok) throw new Error("Fetch failed: " + resp.status);
-          const text = await resp.text();
-          return { ok: true, text };
-        }
-      } catch (err) {
-        return { ok: false, error: err.message };
-      }
-    }
-
-    scanUrlBtn.addEventListener("click", async () => {
-      urlScanResult.hidden = true;
-      urlStatus.textContent = "Fetching page...";
-      const url = urlInput.value.trim();
-      if (!url) { urlStatus.textContent = "Enter a URL first."; return; }
-
-      scanUrlBtn.disabled = true;
-      useProxy.disabled = true;
-
-      // Try direct fetch first if proxy not checked; otherwise use proxy
-      let response = await fetchUrlContent(url, useProxy.checked);
-
-      // If direct fetch failed & proxy not used, offer fallback automatically
-      if (!response.ok && !useProxy.checked) {
-        urlStatus.textContent = "Direct fetch failed (CORS or network). Trying proxy...";
-        response = await fetchUrlContent(url, true);
-      }
-
-      if (!response.ok) {
-        urlScanResult.hidden = false;
-        urlScanResult.className = "result danger";
-        urlScanResult.innerHTML = `<strong>Failed to fetch URL.</strong><br>${escapeHtml(response.error || "Unknown error")}`;
-        urlStatus.textContent = "Ready to scan a website.";
-        scanUrlBtn.disabled = false;
-        useProxy.disabled = false;
-        return;
-      }
-
-      // We have HTML
-      urlStatus.textContent = `Page fetched — running heuristics...`;
-      const html = response.text;
-
-      // Run web-specific scan
-      const webRes = scanHTML(html, url);
-
-      // Extra info: list external script domains (first 12)
-      const scriptDomains = webRes.scriptSrcs.slice(0, 12).map(s => {
-        try { return (new URL(s, url)).hostname; } catch(e) { return s; }
-      });
-      const extraHtml = `<div style="color:#9fb2d1"><strong>External scripts (sample):</strong> ${scriptDomains.length? escapeHtml(scriptDomains.join(", ")) : "None detected"}</div>`;
-
-      renderResult(urlScanResult, webRes, html, extraHtml);
-
-      urlStatus.textContent = "Scan complete.";
-      scanUrlBtn.disabled = false;
-      useProxy.disabled = false;
-    });
-
-  </script>
 </body>
 </html>
